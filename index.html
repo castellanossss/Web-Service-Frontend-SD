@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking App</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://unpkg.com/vue@3.0.0"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="modal fade" id="connectionModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">Connect to Server</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" v-model="backendIp" class="form-control" placeholder="Enter Backend IP">
+                        <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+                        <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" @click="connectToBackend">Connect</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="isConnected && !showCarsList && !showRegistrationForm && !showWithdrawForm" class="welcome-menu">
+            <h2>Welcome to the Parking System</h2>
+            <div class="menu-options">
+                <button @click="showRegisterForm">Register Car</button>
+                <button @click="listCars">List Cars</button>
+                <button @click="showWithdrawCarForm">Withdraw Car</button>
+            </div>
+
+            <div v-if="withdrawAlertMessageA" class="alert alert-info mt-3">
+                {{ withdrawAlertMessageA }}
+            </div>
+        </div>
+
+        <div v-if="showRegistrationForm" class="withdraw-form">
+            <h2>Register a Car</h2>
+            <form @submit.prevent="registerCar">
+                <input type="text" v-model="car.licensePlate" placeholder="License Plate" required>
+                <input type="text" v-model="car.color" placeholder="Color" required>
+                <input type="file" @change="handleFileUpload" required>
+                <div class="button-group">
+                    <button type="submit">Submit</button>
+                    <button type="button" @click="showMenu">Back to Menu</button>
+                </div>
+            </form>
+
+            <div v-if="alertMessage" class="alert" :class="{'alert-success': success, 'alert-danger': !success}">
+                {{ alertMessage }}
+            </div>
+        </div>
+
+        <div v-if="showCarsList" class="car-list-container">
+            <h2 class="car-list-title">List of Registered Cars</h2>
+            <div v-for="car in cars" :key="car.licensePlate" class="car-item">
+                <img :src="`http://${backendIp}:2527/uploads/${car.imagePath}`" alt="Car photo" class="car-image" />
+                <div class="car-details">
+                    <p><strong>Plate:</strong> {{ car.licensePlate }}</p>
+                    <p><strong>Color:</strong> {{ car.color }}</p>
+                    <p><strong>Entry Time:</strong> {{ new Date(car.timestamp).toLocaleString() }}</p>
+                </div>
+            </div>
+            <button class="back-to-menu-btn" @click="showMenuB">Back to Menu</button>
+        </div>
+
+        <div v-if="noCarsRegistered && showCarsList" class="alert alert-info">
+            <p>No cars have been registered yet.</p>
+        </div>
+
+        <div v-if="showWithdrawForm" class="registration-form">
+            <h2>Withdraw a Car</h2>
+            <form @submit.prevent="withdrawCar">
+                <input type="text" v-model="withdrawLicensePlate" placeholder="License Plate" required>
+                <div class="button-group">
+                    <button type="submit">Withdraw</button>
+                    <button type="button" @click="showMenuC">Back to Menu</button>
+                </div>
+            </form>
+
+            <div v-if="withdrawAlertMessageB" class="alert" :class="{'alert-success': success, 'alert-danger': !success}">
+                {{ withdrawAlertMessageB }}
+            </div>
+        </div>
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
