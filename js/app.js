@@ -1,7 +1,11 @@
+
+if(process.env.SERVER_IP  != 'production'){
+    require('dotenv').config();
+    }
 const app = Vue.createApp({
     data() {
         return {
-            backendIp: '127.0.0.1',
+            backendIp:process.env.SERVER_IP,
             serverOnline: true,
             errorMessage: '',
             successMessage: '',
