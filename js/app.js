@@ -1,11 +1,7 @@
-
-if(process.env.SERVER_IP  != 'production'){
-    require('dotenv').config();
-    }
 const app = Vue.createApp({
     data() {
         return {
-            backendIp:process.env.SERVER_IP,
+            backendIp: '',
             serverOnline: true,
             errorMessage: '',
             successMessage: '',
@@ -31,6 +27,18 @@ const app = Vue.createApp({
     },
 
     methods: {
+        ipConfig() {
+            return fetch('/config.json')
+                .then((response) =>
+                    response.json())
+                .then((config) => {
+                    this.backendIp = config.backendIp;
+                })
+                .catch((error) => {
+                    console.error('Cannot load the configuration: ', error)
+                });
+        },
+
         updateServerStatus(online, message) {
             this.serverOnline = online;
             this.serverStatusMessage = message;
@@ -114,7 +122,7 @@ const app = Vue.createApp({
             this.checkServerStatus();
 
             if (!this.serverOnline) {
-                return; 
+                return;
             }
 
             fetch(`http://${this.backendIp}:2527/cars/list`)
@@ -198,7 +206,10 @@ const app = Vue.createApp({
     },
 
     mounted() {
-        this.checkServerStatus();
+        this.ipConfig().then(() => {
+            console.log(this.backendIp);
+            this.checkServerStatus();
+        });
     }
 });
 
