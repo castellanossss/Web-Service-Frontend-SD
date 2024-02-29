@@ -12,29 +12,12 @@
 
 <body>
     <div id="app">
-        <div class="modal fade" id="connectionModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalLabel">Connect to Server</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" v-model="backendIp" class="form-control" placeholder="Enter Backend IP">
-                        <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
-                        <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" @click="connectToBackend">Connect</button>
-                    </div>
-                </div>
-            </div>
+
+        <div v-if="serverStatusMessage" class="alert alert-danger">
+            {{ serverStatusMessage }}
         </div>
 
-        <div v-if="isConnected && !showCarsList && !showRegistrationForm && !showWithdrawForm" class="welcome-menu">
+        <div v-if="!showCarsList && !showRegistrationForm && !showWithdrawForm" class="welcome-menu">
             <h2>Welcome to the Parking System</h2>
             <div class="menu-options">
                 <button @click="showRegisterForm">Register Car</button>
@@ -91,11 +74,11 @@
                 </div>
             </form>
 
-            <div v-if="withdrawAlertMessageB" class="alert" :class="{'alert-success': success, 'alert-danger': !success}">
+            <div v-if="withdrawAlertMessageB" class="alert"
+                :class="{'alert-success': success, 'alert-danger': !success}">
                 {{ withdrawAlertMessageB }}
             </div>
         </div>
-
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

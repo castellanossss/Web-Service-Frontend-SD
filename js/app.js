@@ -1,11 +1,11 @@
 const app = Vue.createApp({
     data() {
         return {
-            backendIp: '',
+            backendIp: '127.0.0.1',
+            serverOnline: true,
             errorMessage: '',
             successMessage: '',
             selectedFileName: '',
-            isConnected: false,
             car: {
                 licensePlate: '',
                 color: '',
@@ -22,43 +22,31 @@ const app = Vue.createApp({
             showWithdrawForm: false,
             withdrawAlertMessageA: '',
             withdrawAlertMessageB: '',
+            serverStatusMessage: '',
         };
     },
+
     methods: {
-        connectToBackend() {
-            this.errorMessage = '';
-            this.successMessage = '';
+        updateServerStatus(online, message) {
+            this.serverOnline = online;
+            this.serverStatusMessage = message;
+        },
 
-            const backendUrl = `http://${this.backendIp}:2527/cars/test-connection`;
-
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
-                reject(new Error('The connection has timed out. Please try again.'));
-            }, 2000));
-
-            Promise.race([
-                fetch(backendUrl, { method: 'GET' }),
-                timeoutPromise
-            ])
+        checkServerStatus() {
+            fetch(`http://${this.backendIp}:2527/cars/test-connection`)
                 .then(response => {
-                    if (!response.ok) throw new Error('Connection failed. Please try again.');
-                    localStorage.setItem('backendIp', this.backendIp);
-                    this.successMessage = 'Connection successful!';
-
-                    setTimeout(() => {
-                        this.successMessage = '';
-                        this.isConnected = true;
-                        $('#connectionModal').modal('hide');
-                    }, 2000);
+                    if (!response.ok) throw new Error('Server is not responding');
+                    this.updateServerStatus(true, '');
                 })
                 .catch(error => {
-                    this.errorMessage = error.message;
-                    this.successMessage = '';
+                    console.error(error);
+                    this.updateServerStatus(false, 'Cannot connect to the server. Please try again later.');
                 });
         },
 
         registerCar() {
             this.alertMessage = '';
-            this.selectedFileName = '';  
+            this.selectedFileName = '';
 
             const formData = new FormData();
             formData.append('license_plate', this.car.licensePlate);
@@ -82,9 +70,8 @@ const app = Vue.createApp({
                     this.car.photo = null;
 
                     setTimeout(() => {
-                        this.alertMessage = ''; 
+                        this.alertMessage = '';
                         this.showRegistrationForm = false;
-                        this.isConnected = true; 
                     }, 2000);
                 })
                 .catch(error => {
@@ -97,8 +84,7 @@ const app = Vue.createApp({
             this.car.licensePlate = '';
             this.car.color = '';
             this.car.photo = null;
-            this.showRegistrationForm = false; 
-            this.isConnected = true;
+            this.showRegistrationForm = false;
         },
 
         handleFileUpload(event) {
@@ -107,7 +93,7 @@ const app = Vue.createApp({
             if (files.length > 0) {
                 const file = files[0];
                 this.car.photo = file;
-                this.selectedFileName = file.name; 
+                this.selectedFileName = file.name;
             } else {
                 this.car.photo = null;
                 this.selectedFileName = '';
@@ -116,12 +102,16 @@ const app = Vue.createApp({
 
         showRegisterForm() {
             this.showRegistrationForm = true;
-            this.isConnected = false;
         },
 
         listCars() {
             this.showCarsList = true;
-            this.noCarsRegistered = false; 
+            this.noCarsRegistered = false;
+            this.checkServerStatus();
+
+            if (!this.serverOnline) {
+                return; 
+            }
 
             fetch(`http://${this.backendIp}:2527/cars/list`)
                 .then(response => {
@@ -132,20 +122,22 @@ const app = Vue.createApp({
                 })
                 .then(carsFromServer => {
                     this.cars = carsFromServer;
+                    this.serverOnline = true;
                     if (this.cars.length === 0) {
                         this.noCarsRegistered = true;
                     }
                 })
                 .catch(error => {
-                    this.errorMessage = error.message;
-                    this.showCarsList = false;
+                    console.error(error);
+                    this.serverOnline = false;
+                    this.cars = [];
+                    this.noCarsRegistered = true;
                 });
         },
 
         showMenuB() {
             this.showCarsList = false;
             this.noCarsRegistered = false;
-            this.isConnected = true; 
         },
 
         withdrawCar() {
@@ -165,7 +157,6 @@ const app = Vue.createApp({
                     this.success = true;
                     setTimeout(() => {
                         this.showWithdrawForm = false;
-                        this.isConnected = true;
                         this.withdrawLicensePlate = '';
                         this.withdrawAlertMessageB = '';
                     }, 3000);
@@ -199,14 +190,12 @@ const app = Vue.createApp({
 
         showMenuC() {
             this.showWithdrawForm = false;
-            this.isConnected = true;
         },
-
     },
+
     mounted() {
-        $('#connectionModal').modal('show');
+        this.checkServerStatus();
     }
 });
 
 app.mount('#app');
-
